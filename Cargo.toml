@@ -1,0 +1,23 @@
+[package]
+name = "tc"
+version = "0.1.0"
+edition = "2021"
+authors = ["Lokasku <lukasku@proton.me>"]
+description = "Multiple type checkers to practice formal proof verification in type theory."
+repository = "https://github.com/lokasku/tc"
+license = "GPL-3.0"
+keywords = ["typechecker", "tc", "language"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[workspace]
+members = [
+    "stlc",
+]
+
+[build-dependencies]
+lalrpop = "0.20.2"
+
+[dependencies]
+stlc = { path = "./stlc" }
+lalrpop-util = { version = "0.20.2", features = ["lexer", "unicode"] }

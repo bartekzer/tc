@@ -1,0 +1,6 @@
+use super::ast::*;
+use std::str::FromStr;
+
+grammar;
+
+pub Num: i32 = r"[0-9]+" => i32::from_str(<>).unwrap();
