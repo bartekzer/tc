@@ -1,1 +1,1 @@
-(λx: Int. (λy: Unit -> (Int -> (Int -> Int) -> Unit) -> Int. ()))
+(\x: Int. \y: Int -> (Unit -> Int) -> Unit. x + (\z: Int. y + z)) 2 1

@@ -10,6 +10,6 @@ fn main() {
 
     match parser::parser().parse(src.clone()) {
         Ok(ast) => println!("{:#?}", ast),
-        Err(parse_error) => parse_error.into_iter().for_each(|e| println!("{e}")),
+        Err(parse_error) => parse_error.into_iter().for_each(|e| println!("{:?}", e)),
     }
 }

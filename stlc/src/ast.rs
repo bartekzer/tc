@@ -46,8 +46,8 @@ pub enum Expression {
         expression: Box<Expression>,
     },
     Application {
-        function: Box<Expression>,
-        argument: Box<Expression>,
+        callee: Box<Expression>,
+        args: Box<Expression>,
     },
     Addition(Box<Expression>, Box<Expression>),
     Int(i32),
