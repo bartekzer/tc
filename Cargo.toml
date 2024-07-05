@@ -15,9 +15,5 @@ members = [
     "stlc",
 ]
 
-[build-dependencies]
-lalrpop = "0.20.2"
-
 [dependencies]
-stlc = { path = "./stlc" }
-lalrpop-util = { version = "0.20.2", features = ["lexer", "unicode"] }
+chumsky = "0.9.3"

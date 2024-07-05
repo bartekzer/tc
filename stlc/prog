@@ -1,1 +1,1 @@
-(\x: Int. \y: Int -> (Unit -> Int) -> Unit. x + (\z: Int. y + z)) 2 1
+(\x:Int.x) t
