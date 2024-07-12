@@ -2,16 +2,20 @@ use crate::ast::*;
 use ariadne::{Label, Report, ReportKind, Source};
 use std::ops::Range;
 
-enum ErrorKind {
+pub enum ErrorKind {
     TypeMismatch {
         expected: String,
-        found: Range<usize>,
-        type_found: String,
+        found_type: String,
+        found_span: Range<usize>,
+    },
+    UndefinedSymbol {
+        name: char,
+        span: Range<usize>,
     },
 }
 
 pub struct Error {
-    kind: ErrorKind,
+    pub kind: ErrorKind,
     pub span: Range<usize>,
 }
 
@@ -39,16 +43,25 @@ impl Error {
         match &self.kind {
             ErrorKind::TypeMismatch {
                 expected,
-                found,
-                type_found,
+                found_type,
+                found_span,
             } => {
+                report =
+                    report
+                        .with_code("type-mismatch")
+                        // .with_message("Expected type {}, but found {}.", expected, )
+                        .with_label(Label::new((filename, found_span.start..found_span.end)).with_message(
+                            format!("Found type {}, expected {}.", found_type, expected),
+                        ))
+            }
+
+            ErrorKind::UndefinedSymbol { name, span } => {
                 report = report
-                    .with_code("type-mismatch")
+                    .with_code("undefined-symbol")
                     // .with_message("Expected type {}, but found {}.", expected, )
                     .with_label(
-                        Label::new((filename, self.span.start..self.span.end)).with_message(
-                            format!("Found type {}, expected {}.", type_found, expected),
-                        ),
+                        Label::new((filename, span.start..span.end))
+                            .with_message(format!("`{}` is not defined.", name)),
                     )
             }
         }

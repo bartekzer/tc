@@ -70,19 +70,10 @@ pub fn parser() -> impl STLCParser {
                 .then(atom.clone().repeated())
                 .foldl(|e1, e2| Expression::Application {
                     callee: Box::new(e1.clone()),
-                    args: Box::new(e2.clone()),
+                    arg: Box::new(e2.clone()),
                     span: {
-                        let get_span = |e: Expression| match e {
-                            Expression::Variable(Variable { span, .. }) => span,
-                            Expression::Abstraction { span, .. } => span,
-                            Expression::Application { span, .. } => span,
-                            Expression::Addition { span, .. } => span,
-                            Expression::Int { span, .. } => span,
-                            Expression::Unit { span } => span,
-                        };
-
-                        let first_span = get_span(e1);
-                        let second_span = get_span(e2);
+                        let first_span = e1.get_span();
+                        let second_span = e2.get_span();
 
                         first_span.start..second_span.end
                     },

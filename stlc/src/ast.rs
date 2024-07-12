@@ -52,7 +52,7 @@ pub enum Expression {
     },
     Application {
         callee: Box<Expression>,
-        args: Box<Expression>,
+        arg: Box<Expression>,
         span: Span,
     },
     Addition {
@@ -69,6 +69,19 @@ pub enum Expression {
     },
 }
 
+impl Expression {
+    pub fn get_span(self) -> Span {
+        match self {
+            Expression::Variable(Variable { span, .. }) => span,
+            Expression::Abstraction { span, .. } => span,
+            Expression::Application { span, .. } => span,
+            Expression::Addition { span, .. } => span,
+            Expression::Int { span, .. } => span,
+            Expression::Unit { span } => span,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Variable {
     pub name: char,
@@ -80,4 +93,27 @@ pub enum Type {
     Function(Box<Type>, Box<Type>),
     Unit,
     Int,
+}
+
+impl Type {
+    pub fn to_string(&self) -> String {
+        match self {
+            Type::Function(_, _) => "Abstraction".to_string(),
+            Type::Unit => "Unit".to_string(),
+            Type::Int=> "Int".to_string()
+        }
+    }
+}
+
+impl PartialEq for Type {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Type::Function(param1, ret1), Type::Function(param2, ret2)) => {
+                param1 == param2 && ret1 == ret2
+            },
+            (Type::Unit, Type::Unit) => true,
+            (Type::Int, Type::Int) => true,
+            _ => false,
+        }
+    }
 }

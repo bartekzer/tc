@@ -1,1 +1,1 @@
-(\x:Int.x) t 0
+(\x: Unit. x) (\x:Int.2)
