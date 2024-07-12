@@ -12,12 +12,12 @@ fn main() {
     match parser::parser().parse(src.clone()) {
         Ok(ast) => {
             println!("{:#?}", ast);
-            
+
             let mut tc = TypeChecker::new();
-            tc.check(ast, 0..src.len())
+            tc.check(ast)
                 .map(|typ| println!("Type: {}", typ.to_string()))
                 .unwrap_or_else(|e| e.report(&std::env::args().nth(1).unwrap()));
-        },
+        }
         Err(parse_error) => parse_error
             .into_iter()
             .for_each(|e| println!("{:?}", e.reason(),)),

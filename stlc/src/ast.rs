@@ -61,7 +61,7 @@ pub enum Expression {
         span: Span,
     },
     Int {
-        n: i32,
+        _n: i32,
         span: Span,
     },
     Unit {
@@ -98,9 +98,18 @@ pub enum Type {
 impl Type {
     pub fn to_string(&self) -> String {
         match self {
-            Type::Function(_, _) => "Abstraction".to_string(),
+            Type::Function(param1, ret1) => {
+                let param_str = param1.to_string();
+                let ret_str = ret1.to_string();
+                let param_parenthesized = if let Type::Function(..) = **param1 {
+                    format!("({})", param_str)
+                } else {
+                    param_str
+                };
+                format!("{} -> {}", param_parenthesized, ret_str)
+            }
             Type::Unit => "Unit".to_string(),
-            Type::Int=> "Int".to_string()
+            Type::Int => "Int".to_string(),
         }
     }
 }
@@ -110,7 +119,7 @@ impl PartialEq for Type {
         match (self, other) {
             (Type::Function(param1, ret1), Type::Function(param2, ret2)) => {
                 param1 == param2 && ret1 == ret2
-            },
+            }
             (Type::Unit, Type::Unit) => true,
             (Type::Int, Type::Int) => true,
             _ => false,

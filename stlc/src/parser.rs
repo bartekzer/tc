@@ -31,7 +31,7 @@ pub fn parser() -> impl STLCParser {
             just("()").map_with_span(|_, span| Expression::Unit { span }),
             // Int
             text::int(10).map_with_span(|n: String, span| Expression::Int {
-                n: n.parse::<i32>().unwrap(),
+                _n: n.parse::<i32>().unwrap(),
                 span,
             }),
             // Variable
