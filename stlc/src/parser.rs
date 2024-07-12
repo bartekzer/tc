@@ -22,15 +22,18 @@ pub fn parser() -> impl STLCParser {
     });
 
     let variable = filter(|l: &char| l.is_ascii_lowercase())
-        .map(|l| Variable(l))
+        .map_with_span(|l, span| Variable { name: l, span })
         .padded();
 
     let expr = recursive(|expr| {
         let atom = choice((
             // Unit
-            just("()").to(Expression::Unit),
+            just("()").map_with_span(|_, span| Expression::Unit { span }),
             // Int
-            text::int(10).map(|n: String| Expression::Int(n.parse::<i32>().unwrap())),
+            text::int(10).map_with_span(|n: String, span| Expression::Int {
+                n: n.parse::<i32>().unwrap(),
+                span,
+            }),
             // Variable
             variable.map(|var| Expression::Variable(var)),
             // Priority
@@ -43,7 +46,11 @@ pub fn parser() -> impl STLCParser {
             atom.clone()
                 .then_ignore(just('+').padded())
                 .then(expr.clone())
-                .map(|(lhs, rhs)| Expression::Addition(Box::new(lhs), Box::new(rhs))),
+                .map_with_span(|(lhs, rhs), span| Expression::Addition {
+                    lhs: Box::new(lhs),
+                    rhs: Box::new(rhs),
+                    span,
+                }),
             // Abs
             just('λ')
                 .or(just('\\'))
@@ -52,17 +59,33 @@ pub fn parser() -> impl STLCParser {
                 .then(typ)
                 .then_ignore(just('.'))
                 .then(expr.clone())
-                .map(|((var, r#type), expr)| Expression::Abstraction {
+                .map_with_span(|((var, r#type), expr), span| Expression::Abstraction {
                     variable: var,
                     typ: r#type,
                     expression: Box::new(expr),
+                    span,
                 }),
             // App
             atom.clone()
                 .then(atom.clone().repeated())
                 .foldl(|e1, e2| Expression::Application {
-                    callee: Box::new(e1),
-                    args: Box::new(e2),
+                    callee: Box::new(e1.clone()),
+                    args: Box::new(e2.clone()),
+                    span: {
+                        let get_span = |e: Expression| match e {
+                            Expression::Variable(Variable { span, .. }) => span,
+                            Expression::Abstraction { span, .. } => span,
+                            Expression::Application { span, .. } => span,
+                            Expression::Addition { span, .. } => span,
+                            Expression::Int { span, .. } => span,
+                            Expression::Unit { span } => span,
+                        };
+
+                        let first_span = get_span(e1);
+                        let second_span = get_span(e2);
+
+                        first_span.start..second_span.end
+                    },
                 }),
         ))
         .padded();

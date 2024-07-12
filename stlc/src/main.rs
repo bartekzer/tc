@@ -1,6 +1,7 @@
 #![feature(trait_alias)]
 use chumsky::Parser;
 mod ast;
+mod error;
 mod parser;
 mod typechecker;
 
