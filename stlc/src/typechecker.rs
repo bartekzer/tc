@@ -9,7 +9,7 @@ impl TypeChecker {
         Self(HashMap::new())
     }
 
-    pub fn check(&mut self, expr: Expression) -> Result<Type, Error> {
+    pub fn infer(&mut self, expr: Expression) -> Result<Type, Error> {
         match expr {
             Expression::Variable(Variable { name, span }) => {
                 if let Some(typ) = self.0.get(&name) {
@@ -24,14 +24,14 @@ impl TypeChecker {
                 expression,
                 ..
             } => {
-                self.0.insert(variable.name, typ.clone()); // /!\
-                let ret_type = self.check(*expression)?;
+                self.0.insert(variable.name, typ.clone());
+                let ret_type = self.infer(*expression)?;
                 Ok(Type::Function(Box::new(typ), Box::new(ret_type)))
             }
             Expression::Application { callee, arg, .. } => {
-                let callee_type = self.check(*callee)?;
+                let callee_type = self.infer(*callee)?;
                 if let Type::Function(head_type, subsequent_type) = callee_type.clone() {
-                    let arg_type = self.check(*arg.clone())?;
+                    let arg_type = self.infer(*arg.clone())?;
                     if *head_type == arg_type {
                         return Ok(*subsequent_type);
                     } else {
@@ -50,15 +50,15 @@ impl TypeChecker {
                 }
             }
             Expression::Addition { lhs, rhs, .. } => {
-                let lhs_type = self.check(*lhs.clone())?;
+                let lhs_type = self.infer(*lhs.clone())?;
                 if Type::Int == lhs_type {
-                    let rhs_type = self.check(*rhs.clone())?;
+                    let rhs_type = self.infer(*rhs.clone())?;
                     if Type::Int == rhs_type {
                         return Ok(Type::Int);
                     } else {
                         return Err(Error::TypeMismatch {
                             expected: Type::Int.to_string(),
-                            found: lhs_type.to_string(),
+                            found: rhs_type.to_string(),
                             span: rhs.get_span(),
                         });
                     }

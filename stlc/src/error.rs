@@ -1,5 +1,6 @@
-use ariadne::{Label, Report, ReportKind, Source};
+use ariadne::{Color, Label, Report, ReportKind, Source};
 use std::ops::Range;
+use yansi::Paint;
 
 pub enum Error {
     TypeMismatch {
@@ -27,17 +28,26 @@ impl Error {
             } => {
                 report = report
                     .with_code("type-mismatch")
-                    .with_message(format!("Expected type {}, but found {}.", expected, found))
+                    .with_message(format!(
+                        "Expected type `{}`, but found `{}`.",
+                        expected.cyan().bold(),
+                        found.cyan().bold()
+                    ))
                     .with_label(
                         Label::new((filename, span.start..span.end))
-                            .with_message(format!("Found type `{}`", found)),
+                            .with_message(format!("Found type `{}`.", found.cyan().bold()))
+                            .with_color(Color::Magenta),
                     )
             }
             Error::UndefinedSymbol { name, span } => {
-                report = report.with_code("undefined-symbol").with_label(
-                    Label::new((filename, span.start..span.end))
-                        .with_message(format!("`{}` is not defined.", name)),
-                )
+                report = report
+                    .with_code("undefined-symbol")
+                    .with_message(format!("Undefined symbol `{}`.", name.cyan().bold()))
+                    .with_label(
+                        Label::new((filename, span.start..span.end))
+                            .with_message(format!("`{}` is not defined.", name.cyan().bold()))
+                            .with_color(Color::Magenta),
+                    )
             }
         }
         report
