@@ -1,0 +1,9 @@
+[package]
+name = "hm"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chumsky = "0.9.3"
+ariadne = { version = "0.4.1", features = ["auto-color"] }
+yansi = "1.0.1"
