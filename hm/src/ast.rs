@@ -40,6 +40,11 @@ pub enum Expression {
         arg: Box<Expression>,
         span: Span,
     },
+    Addition {
+        lhs: Box<Expression>,
+        rhs: Box<Expression>,
+        span: Span,
+    },
     Let {
         bind: Box<Bind>,
         body: Box<Expression>,
@@ -48,6 +53,12 @@ pub enum Expression {
     Letrec {
         binds: Vec<Bind>,
         body: Box<Expression>,
+        span: Span,
+    },
+    Int {
+        span: Span,
+    },
+    Unit {
         span: Span,
     },
 }
@@ -66,12 +77,15 @@ impl Expression {
             Expression::Application { span, .. } => span,
             Expression::Let { span, .. } => span,
             Expression::Letrec { span, .. } => span,
+            Expression::Addition { span, .. } => span,
+            Expression::Int { span, .. } => span,
+            Expression::Unit { span } => span,
         }
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct Variable {
-    pub name: char,
+    pub name: String,
     pub span: Span,
 }
