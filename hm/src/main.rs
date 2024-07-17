@@ -3,7 +3,7 @@ mod ast;
 mod error;
 mod inference;
 mod parser;
-use std::collections::HashMap;
+use im::HashMap;
 
 use crate::inference::Inference;
 use chumsky::Parser;
@@ -16,12 +16,10 @@ fn main() {
             let mut inference = Inference::new();
             match inference.infer(ast, HashMap::new()) {
                 Ok(t) => {
-                    inference
-                        .solve_constraints()
-                        .unwrap_or_else(|e| {
-                            e.report(&std::env::args().nth(1).unwrap());
-                            inference.debug();
-                            std::process::exit(1);
+                    inference.solve_constraints().unwrap_or_else(|e| {
+                        e.report(&std::env::args().nth(1).unwrap());
+                        inference.debug();
+                        std::process::exit(1);
                     });
 
                     println!("{}", inference.substitute(t).to_string().green().bold());

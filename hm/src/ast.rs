@@ -4,8 +4,11 @@
 ⟨expression⟩ ⩴ ⟨variable⟩
               | ⟨abstraction⟩
               | ⟨application⟩
+              | ⟨addition⟩
               | ⟨let⟩
               | ⟨letrec⟩
+              | ⟨int⟩
+              | ⟨unit⟩
               | '(' ⟨expression⟩ ')'
 
 ⟨variable⟩ ⩴ ⟨letter⟩
@@ -17,6 +20,17 @@
 ⟨let⟩ ⩴ 'let' ⟨bind⟩ 'in' ⟨expression⟩
 
 ⟨letrec⟩ ⩴ 'letrec' ⟨bind⟩ ';' ... 'in' ⟨expression⟩
+
+⟨unit⟩ ⩴  '()'
+
+⟨int⟩ ⩴  ⟨integer⟩
+
+⟨integer⟩ ⩴  ⟨digit⟩+
+           | '-' ⟨digit⟩+
+
+⟨addition⟩ ⩴  ⟨digit⟩ '+' ⟨digit⟩
+
+⟨digit⟩ ⩴  '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
 
 ⟨abstraction⟩ ⩴ 'λ' ⟨variable⟩ '.' ⟨expression⟩
 

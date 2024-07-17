@@ -1,6 +1,6 @@
 use crate::ast::*;
 use crate::error::Error;
-use std::collections::HashMap;
+use im::HashMap;
 use yansi::Paint;
 
 #[derive(Debug, Clone)]
