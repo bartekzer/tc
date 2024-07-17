@@ -14,11 +14,20 @@ fn main() {
     match parser::parser().parse(src.clone()) {
         Ok(ast) => {
             let mut inference = Inference::new();
-            inference
-                .infer(ast, HashMap::new())
-                .map(|typ| println!("{}", typ.to_string().green().bold()))
-                .unwrap_or_else(|e| e.report(&std::env::args().nth(1).unwrap()));
-            inference.debug();
+            match inference.infer(ast, HashMap::new()) {
+                Ok(t) => {
+                    inference
+                        .solve_constraints()
+                        .unwrap_or_else(|e| {
+                            e.report(&std::env::args().nth(1).unwrap());
+                            inference.debug();
+                            std::process::exit(1);
+                    });
+
+                    println!("{}", inference.substitute(t).to_string().green().bold());
+                }
+                Err(e) => e.report(&std::env::args().nth(1).unwrap()),
+            }
         }
         Err(parse_error) => parse_error
             .into_iter()

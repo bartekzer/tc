@@ -4,15 +4,9 @@ use chumsky::prelude::*;
 pub trait HMParser = Parser<char, Expression, Error = Simple<char>>;
 
 pub fn parser() -> impl HMParser {
-    let variable_char = filter(|l: &char| l.is_ascii_lowercase())
-        .map_with_span(|l, span| Variable {
-            name: l.to_string(),
-            span,
-        })
-        .padded();
-
-    let variable_string = filter(|l: &char| l.is_ascii_lowercase())
+    let variable = filter(|l: &char| l.is_ascii_lowercase())
         .repeated()
+        .at_least(1)
         .map_with_span(|x, span| Variable {
             name: x.iter().collect::<String>(),
             span,
@@ -26,13 +20,13 @@ pub fn parser() -> impl HMParser {
             // Int
             text::int(10).map_with_span(|_, span| Expression::Int { span }),
             // Variable
-            variable_char.map(|var| Expression::Variable(var)),
+            variable.map(|var| Expression::Variable(var)),
             // Priority
             expr.clone().delimited_by(just('('), just(')')),
         ))
         .padded();
 
-        let bind = variable_string
+        let bind = variable
             .then_ignore(just('=').padded())
             .then(expr.clone())
             .then_ignore(just(';').padded())
@@ -75,7 +69,7 @@ pub fn parser() -> impl HMParser {
             // Abs
             just('λ')
                 .or(just('\\'))
-                .ignore_then(variable_char)
+                .ignore_then(variable)
                 .then_ignore(just('.'))
                 .then(expr.clone())
                 .map_with_span(|(variable, expression), span| Expression::Abstraction {

@@ -1,3 +1,4 @@
+use crate::inference::Type;
 use ariadne::{Color, Label, Report, ReportKind, Source};
 use std::ops::Range;
 use yansi::Paint;
@@ -5,21 +6,9 @@ use yansi::Paint;
 type Span = Range<usize>;
 
 pub enum Error {
-    UnificationFailure {
-        expected: String,
-        found: String,
-        span: Span,
-    },
-    UntypeableExpression {
-        span: Span,
-    },
-    InfiniteType {
-        span: Span,
-    },
-    UndefinedSymbol {
-        name: String,
-        span: Span,
-    },
+    UnificationFailure { t1: Type, t2: Type },
+    InfiniteType { t1: Type, t2: Type },
+    UndefinedSymbol { name: String, span: Span },
 }
 
 impl Error {
@@ -29,37 +18,21 @@ impl Error {
         let mut report = Report::build(ReportKind::Error, filename, 1);
 
         match &self {
-            Error::UnificationFailure {
-                expected,
-                found,
-                span,
-            } => {
+            Error::UnificationFailure { t1, t2 } => {
                 report = report
                     .with_code("unification-failure")
                     .with_message(format!(
-                        "Expected type `{}`, but found `{}`.",
-                        expected.cyan().bold(),
-                        found.cyan().bold()
+                        "Cannot unify `{}` with `{}`.",
+                        t1.to_string().cyan().bold(),
+                        t2.to_string().cyan().bold()
                     ))
-                    .with_label(
-                        Label::new((filename, span.start..span.end))
-                            .with_message(format!("Found type `{}`.", found.cyan().bold()))
-                            .with_color(Color::Magenta),
-                    )
             }
-            Error::UntypeableExpression { span } => {
-                report = report.with_code("untypeable-expression").with_label(
-                    Label::new((filename, span.start..span.end))
-                        .with_message("Expression is untypeable.".cyan().bold())
-                        .with_color(Color::Magenta),
-                )
-            }
-            Error::InfiniteType { span } => {
-                report = report.with_code("infinite-type").with_label(
-                    Label::new((filename, span.start..span.end))
-                        .with_message("Infinite type.".cyan().bold())
-                        .with_color(Color::Magenta),
-                )
+            Error::InfiniteType { t1, t2 } => {
+                report = report.with_code("infinite-type").with_message(format!(
+                    "Infinite loop detected between `{}` and `{}`.",
+                    t1.to_string().cyan().bold(),
+                    t2.to_string().cyan().bold()
+                ))
             }
             Error::UndefinedSymbol { name, span } => {
                 report = report

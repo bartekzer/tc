@@ -45,6 +45,7 @@ impl PartialEq for Type {
     }
 }
 
+#[derive(Clone)]
 pub struct Constraint(Type, Type);
 
 pub struct Inference {
@@ -62,7 +63,12 @@ impl Inference {
     pub fn debug(&self) {
         println!("Constraints:");
         for (id, constraint) in &self.constraints {
-            println!("{}: {} = {}", id.bold(), constraint.0.to_string().bold().cyan(), constraint.1.to_string().bold().cyan());
+            println!(
+                "{}: {} = {}",
+                id.bold(),
+                constraint.0.to_string().bold().cyan(),
+                constraint.1.to_string().bold().cyan()
+            );
         }
 
         println!("\nSubstitutions:");
@@ -103,7 +109,7 @@ impl Inference {
                 .get(&name)
                 .ok_or(Error::UndefinedSymbol { name, span })
                 .cloned(),
-            Expression::Addition { lhs, rhs, span } => {
+            Expression::Addition { lhs, rhs, .. } => {
                 let t1 = self.infer(*lhs, env.clone())?;
                 let t2 = self.infer(*rhs, env)?;
                 self.constraints
@@ -136,6 +142,68 @@ impl Inference {
             }
             Expression::Int { .. } => Ok(Type::Int),
             Expression::Unit { .. } => Ok(Type::Unit),
+        }
+    }
+    pub fn solve_constraints(&mut self) -> Result<(), Error> {
+        let constraints = self.constraints.clone();
+        self.constraints.resetting();
+        for (_, constraint) in constraints {
+            self.unify(constraint.0, constraint.1)?;
+        }
+        Ok(())
+    }
+    pub fn unify(&mut self, t1: Type, t2: Type) -> Result<(), Error> {
+        match (t1, t2) {
+            (t1 @ Type::Variable(id), t2) if *self.substitutions.get(&id).unwrap() != t1 => {
+                self.unify(self.substitutions.get(&id).unwrap().clone(), t2)
+            }
+            (t1, t2 @ Type::Variable(id)) if *self.substitutions.get(&id).unwrap() != t2 => {
+                self.unify(t1, self.substitutions.get(&id).unwrap().clone())
+            }
+            (t1 @ Type::Variable(id), t2) => {
+                if Self::occurs_in(id, t2.clone()) {
+                    return Err(Error::InfiniteType { t1, t2 });
+                } else {
+                    self.substitutions.insert(id, t2);
+                    Ok(())
+                }
+            }
+            (t1, t2 @ Type::Variable(id)) => {
+                if Self::occurs_in(id, t1.clone()) {
+                    return Err(Error::InfiniteType { t1, t2 });
+                } else {
+                    self.substitutions.insert(id, t1);
+                    Ok(())
+                }
+            }
+            (Type::Function(param1, ret1), Type::Function(param2, ret2)) => {
+                self.unify(*param1, *param2)?;
+                self.unify(*ret1, *ret2)
+            }
+            (Type::Int, Type::Int) => Ok(()),
+            (Type::Unit, Type::Unit) => Ok(()),
+            (t1, t2) => Err(Error::UnificationFailure { t1, t2 }),
+        }
+    }
+    fn occurs_in(index: u16, t: Type) -> bool {
+        match t {
+            Type::Function(param, ret) => {
+                Self::occurs_in(index, *param) || Self::occurs_in(index, *ret)
+            }
+            Type::Variable(id) => id == index,
+            _ => false,
+        }
+    }
+    pub fn substitute(&self, t: Type) -> Type {
+        match t {
+            t @ Type::Variable(id) if *self.substitutions.get(&id).unwrap() != t => {
+                self.substitute(self.substitutions.get(&id).unwrap().clone())
+            }
+            Type::Function(param, ret) => Type::Function(
+                Box::new(self.substitute(*param)),
+                Box::new(self.substitute(*ret)),
+            ),
+            _ => t,
         }
     }
 }
